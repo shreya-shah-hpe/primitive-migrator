@@ -104,15 +104,15 @@ const moveFiles$ = (package) => {
     const mvStencilConfig$ = () => exec$(moveCmd('stencil.config.ts'))
     const mvSrc$ = () => exec$(moveCmd('src'))
     const mvUtils$ = () => exec$(moveCmd('utils'))
-    const mvGithub$ = () => exec$(moveCmd('.github'))
     const mvStorybook$ = () => exec$(moveCmd('.storybook'))
 
-    const removeCmd = (file) => `cd ${package} && rm ${file}`;
+    const removeCmd = (file) => `cd ${package} && rm -rf ${file}`;
     const removeCopyrightignore$ = () => exec$(removeCmd('.copyrightignore'))
     const removeGitIgnore$ = () => exec$(removeCmd('.gitignore'))
     const removeNPMRC$ = () => exec$(removeCmd('.npmrc'))
     const removePrettierIgnore$ = () => exec$(removeCmd('.prettierignore'))
     const removeCodeowners$ = () => exec$(removeCmd('CODEOWNERS'))
+    const removeGithub$ = () => exec$(removeCmd('.github'))
 
     return mkdirPackagesDir$().pipe(
         // Moves
@@ -125,7 +125,6 @@ const moveFiles$ = (package) => {
         switchMap(mvStencilConfig$),
         switchMap(mvSrc$),
         switchMap(mvUtils$),
-        switchMap(mvGithub$),
         switchMap(mvStorybook$),
 
         // Remove
@@ -134,6 +133,7 @@ const moveFiles$ = (package) => {
         switchMap(removeNPMRC$),
         switchMap(removePrettierIgnore$),
         switchMap(removeCodeowners$),
+        switchMap(removeGithub$)
     )
 }
 
