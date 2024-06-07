@@ -111,8 +111,13 @@ const moveFiles$ = (package) => {
     const removeGitIgnore$ = () => exec$(removeCmd('.gitignore'))
     const removeNPMRC$ = () => exec$(removeCmd('.npmrc'))
     const removePrettierIgnore$ = () => exec$(removeCmd('.prettierignore'))
+    const removeEslintIgnore$ = () => exec$(removeCmd('.eslintignore'))
+    const removePrettierJson$ = () => exec$(removeCmd('.prettierrc.json'))
+    const removeEslintJson$ = () => exec$(removeCmd('.eslintrc.json'))
     const removeCodeowners$ = () => exec$(removeCmd('CODEOWNERS'))
     const removeGithub$ = () => exec$(removeCmd('.github'))
+    const removePackageLock$ = () => exec$(removeCmd('package-lock.json'))
+    const removeMakeFile$ = () => exec$(removeCmd('Makefile'))
 
     return mkdirPackagesDir$().pipe(
         // Moves
@@ -133,7 +138,12 @@ const moveFiles$ = (package) => {
         switchMap(removeNPMRC$),
         switchMap(removePrettierIgnore$),
         switchMap(removeCodeowners$),
-        switchMap(removeGithub$)
+        switchMap(removeGithub$),
+        switchMap(removePackageLock$),
+        switchMap(removePrettierJson$),
+        switchMap(removeEslintJson$),
+        switchMap(removeEslintIgnore$),
+        switchMap(removeMakeFile$),
     )
 }
 
