@@ -101,7 +101,6 @@ const moveFiles$ = (package) => {
     const mvStencilConfig$ = () => exec$(moveCmd('stencil.config.ts'))
     const mvCypressConfig$ = () => exec$(moveCmd('cypress.config.ts'))
     const mvSrc$ = () => exec$(moveCmd('src'))
-    const mvUtils$ = () => exec$(moveCmd('utils'))
     const mvStorybook$ = () => exec$(moveCmd('.storybook'))
 
     const removeCmd = (file) => `cd ${package} && rm -rf ${file}`;
@@ -135,7 +134,6 @@ const moveFiles$ = (package) => {
         switchMap(() => applyTSBaseFile$(package)),
         switchMap(() => applyCypressConfig$(package)),
         switchMap(mvSrc$),
-        switchMap(mvUtils$),
         switchMap(mvStorybook$),
 
         // Remove
