@@ -2,8 +2,7 @@
 
 import { Config } from "@stencil/core";
 import { postcss } from "@stencil-community/postcss";
-import autoprefixer from "autoprefixer";
-import { baseConfig } from "@primitive-components/stencil-config";
+import { baseConfig, postcssPlugins } from "@primitive-components/stencil-config";
 import storageStyles from "@storage/dscc-storage-styles";
 
 export const config: Config = {
@@ -13,7 +12,7 @@ export const config: Config = {
     ...baseConfig.plugins,
     postcss({
       // Add postcss plugins
-      plugins: [storageStyles, autoprefixer()],
+      plugins: [storageStyles, ...postcssPlugins],
     }),
   ],
 };
