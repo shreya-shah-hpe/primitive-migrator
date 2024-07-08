@@ -197,7 +197,7 @@ const applyCypressConfig$ = (package) => {
 const commitAndPush$ = (package) => exec$(`cd ${package} && git .`).pipe(
     // Add, Commit, Branch
     switchMap(() => exec$(`cd ${package} && git add .`)),
-    switchMap(() => exec$(`cd ${package} && git commit -m 'mono repo prep'`)),
+    switchMap(() => exec$(`cd ${package} && git commit -m 'Initial package migration'`)),
     switchMap(() => exec$(`cd ${package} && git checkout -b ${BranchName}`)),
 
     // Push
