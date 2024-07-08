@@ -1,0 +1,4 @@
+{
+  "extends": "@primitive-components/ts-config/index.json",
+  "include": ["src"]
+}

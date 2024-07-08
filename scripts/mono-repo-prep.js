@@ -1,8 +1,9 @@
-const { from, switchMap, concat, toArray, catchError, of, tap } = require('rxjs');
+const { from, switchMap, concat, toArray, catchError, of, tap, map } = require('rxjs');
+const fs = require('fs').promises;
 const path = require('path');
 const util = require('node:util');
 const exec = util.promisify(require('node:child_process').exec);
-const BranchName = 'mono-test-4';
+const BranchName = 'button-migration-mono-repo';
 
 /**
  * Exec
@@ -17,16 +18,13 @@ const exec$ = cmd => from(exec(cmd)).pipe(
  * Rpose
  */
 const repos = {
-    'stencil-anchor': {
-        repo: 'https://github.com/rhys-devine-hpe/stencil-anchor.git',
-    },
 
     // 'stencil-anchor': {
     //     repo: 'https://github.com/hpe-cds/stencil-anchor',
     // },
-    // 'stencil-button': {
-    //     repo: 'https://github.com/hpe-cds/stencil-button',
-    // },
+    'stencil-button': {
+        repo: 'https://github.com/hpe-cds/stencil-button',
+    },
     // 'stencil-grid': {
     //     repo: 'https://github.com/hpe-cds/stencil-grid',
     // },
@@ -98,27 +96,45 @@ const moveFiles$ = (package) => {
     const moveCmd = (file) => `cd ${package} && git mv ./${file} ./packages/${package}/${file}`;
     const mvSVG$ = () => exec$(moveCmd('namespace-ready.svg'))
     const mvPackage$ = () => exec$(moveCmd('package.json'))
-    const mvPackageLock$ = () => exec$(moveCmd('package-lock.json'))
     const mvReadme$ = () => exec$(moveCmd('readme.md'))
     const mvTSConfig$ = () => exec$(moveCmd('tsconfig.json'))
     const mvStencilConfig$ = () => exec$(moveCmd('stencil.config.ts'))
+    const mvCypressConfig$ = () => exec$(moveCmd('cypress.config.ts'))
+    const mvSrc$ = () => exec$(moveCmd('src'))
+    const mvStorybook$ = () => exec$(moveCmd('.storybook'))
 
-    const removeCmd = (file) => `cd ${package} && rm ${file}`;
+    const removeCmd = (file) => `cd ${package} && rm -rf ${file}`;
     const removeCopyrightignore$ = () => exec$(removeCmd('.copyrightignore'))
     const removeGitIgnore$ = () => exec$(removeCmd('.gitignore'))
     const removeNPMRC$ = () => exec$(removeCmd('.npmrc'))
     const removePrettierIgnore$ = () => exec$(removeCmd('.prettierignore'))
+    const removePrettierJson$ = () => exec$(removeCmd('.prettierrc.json'))
+    const removeEslintIgnore$ = () => exec$(removeCmd('.eslintignore'))
+    const removeEslintJson$ = () => exec$(removeCmd('.eslintrc.json'))
+    const removeEslintJs$ = () => exec$(removeCmd('.eslintrc.js'))
     const removeCodeowners$ = () => exec$(removeCmd('CODEOWNERS'))
+    const removeGithub$ = () => exec$(removeCmd('.github'))
+    const removePackageLock$ = () => exec$(removeCmd('package-lock.json'))
+    const removeMakeFile$ = () => exec$(removeCmd('Makefile'))
+    const removeEditorConfig$ = () => exec$(removeCmd('editorconfig'))
+    const removeTsConfigEslintJson$ = () => exec$(removeCmd('tsconfig.eslint.json'))
+    const removeUtils$ = () => exec$(removeCmd('utils'))
 
     return mkdirPackagesDir$().pipe(
         // Moves
         switchMap(mkdirPackagesName$),
         switchMap(mvSVG$),
         switchMap(mvPackage$),
-        switchMap(mvPackageLock$),
         switchMap(mvReadme$),
         switchMap(mvTSConfig$),
         switchMap(mvStencilConfig$),
+        switchMap(mvCypressConfig$),
+        // Apply base file
+        switchMap(() => applyStencilBaseFile$(package)),
+        switchMap(() => applyTSBaseFile$(package)),
+        switchMap(() => applyCypressConfig$(package)),
+        switchMap(mvSrc$),
+        switchMap(mvStorybook$),
 
         // Remove
         switchMap(removeCopyrightignore$),
@@ -126,6 +142,50 @@ const moveFiles$ = (package) => {
         switchMap(removeNPMRC$),
         switchMap(removePrettierIgnore$),
         switchMap(removeCodeowners$),
+        switchMap(removeGithub$),
+        switchMap(removePackageLock$),
+        switchMap(removePrettierJson$),
+        switchMap(removeEslintJson$),
+        switchMap(removeEslintIgnore$),
+        switchMap(removeMakeFile$),
+        switchMap(removeEditorConfig$),
+        switchMap(removeTsConfigEslintJson$),
+        switchMap(removeEslintJs$),
+        switchMap(removeUtils$),
+    )
+}
+
+/**
+ * Apply Generic Files
+ * @param {*} package 
+ */
+const applyStencilBaseFile$ = (package) => {
+    const stencilBaseConfig$ = from(fs.readFile('../base-files/stencil.config.ts', "utf8"));
+    return stencilBaseConfig$.pipe(
+        map((config) => config.replace(`{{plugingName}}`, package)),
+        switchMap((config) => from(fs.writeFile(`${package}/packages/${package}/stencil.config.ts`, config, 'utf8')))
+    )
+}
+
+/**
+ * Apply Generic Files
+ * @param {*} package 
+ */
+const applyTSBaseFile$ = (package) => {
+    const tsBaseConfig$ = from(fs.readFile('../base-files/tsconfig.json', "utf8"));
+    return tsBaseConfig$.pipe(
+        switchMap((config) => from(fs.writeFile(`${package}/packages/${package}/tsconfig.json`, config, 'utf8')))
+    )
+}
+
+/**
+ * Apply Generic Files
+ * @param {*} package 
+ */
+const applyCypressConfig$ = (package) => {
+    const cypressConfig$ = from(fs.readFile('../base-files/cypress.config.ts', "utf8"));
+    return cypressConfig$.pipe(
+        switchMap((config) => from(fs.writeFile(`${package}/packages/${package}/cypress.config.ts`, config, 'utf8')))
     )
 }
 
@@ -137,7 +197,7 @@ const moveFiles$ = (package) => {
 const commitAndPush$ = (package) => exec$(`cd ${package} && git .`).pipe(
     // Add, Commit, Branch
     switchMap(() => exec$(`cd ${package} && git add .`)),
-    switchMap(() => exec$(`cd ${package} && git commit -m 'mono repo prep'`)),
+    switchMap(() => exec$(`cd ${package} && git commit -m 'Initial package migration'`)),
     switchMap(() => exec$(`cd ${package} && git checkout -b ${BranchName}`)),
 
     // Push
@@ -150,7 +210,7 @@ const commitAndPush$ = (package) => exec$(`cd ${package} && git .`).pipe(
  * @returns 
  */
 // cloneRepo$('https://github.com/rhys-devine-hpe/primitive-components.git')
-const mergeReposAndCreatePR$ = (repo) => cloneRepo$('https://github.com/rhys-devine-hpe/primitive-components.git').pipe(
+const mergeReposAndCreatePR$ = (repo) => cloneRepo$('https://github.com/hpe-cds/primitive-components.git').pipe(
     // Merge Repose
     switchMap(() => exec$(`cd primitive-components && git remote add repo2 '${repo}'`)),
     switchMap(() => exec$(`cd primitive-components && git fetch repo2 --tags`)),
