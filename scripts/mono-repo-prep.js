@@ -23,7 +23,7 @@ const repos = {
     //     repo: 'https://github.com/hpe-cds/stencil-anchor',
     // },
     'stencil-button': {
-        repo: 'https://github.com/shreya-shah-hpe/stencil-button',
+        repo: 'https://github.com/hpe-cds/stencil-button',
     },
     // 'stencil-grid': {
     //     repo: 'https://github.com/hpe-cds/stencil-grid',
